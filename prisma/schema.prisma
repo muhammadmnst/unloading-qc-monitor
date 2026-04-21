@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  QC
+  OPERATIONAL
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      UserRole @default(QC)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehicleLogs VehicleLog[]
+}
+
+enum MaterialType {
+  CPO
+  PK
+  CANGKANG
+}
+
+enum VehicleStatus {
+  PENDING
+  BONGKAR
+  CANCEL
+  COMPLETED
+}
+
+model VehicleLog {
+  id           String        @id @default(uuid())
+  materialType MaterialType
+  noPolisi     String
+  pmks         String
+  status       VehicleStatus @default(PENDING)
+  remarks      String?
+
+  ffa          Float?
+  moisture     String?
+  ka           Float?
+  kk           Float?
+  stone        Float?
+
+  pendingAt    DateTime      @default(now())
+  bongkarAt    DateTime?
+  cancelAt     DateTime?
+  completedAt  DateTime?
+
+  recordedById String
+  recordedBy   User          @relation(fields: [recordedById], references: [id])
+}

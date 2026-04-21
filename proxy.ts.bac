@@ -1,0 +1,37 @@
+import { auth } from "@/auth"
+import { NextResponse } from "next/server"
+
+// Next.js 16 Proxy configuration
+// This function handles edge-case redirects and authorization
+export default async function proxy(req) {
+  const { nextUrl } = req
+  const session = await auth()
+  const isLoggedIn = !!session
+  
+  const isAdminRoute = nextUrl.pathname.startsWith("/admin")
+
+  // 1. Authorization: Redirect unauthenticated users to /login
+  if (!isLoggedIn) {
+     return NextResponse.redirect(new URL("/login", nextUrl))
+  }
+
+  // 2. Role-based Access Control: Only ADMIN can access /admin
+  if (isAdminRoute && session?.user?.role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/", nextUrl)) 
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for:
+     * - api (API routes and auth)
+     * - login (Login page - handled natively)
+     * - tv (Public dashboard)
+     * - static files (_next, images, etc.)
+     */
+    '/((?!api|login|tv|_next/static|_next/image|favicon.ico|login-bg.jpg|logo.png).*)',
+  ],
+}

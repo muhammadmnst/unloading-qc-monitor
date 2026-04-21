@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+npm-cache
+.corepack
+node_test
+cleanup.bat
+fix-npm.bat
+repair-v2.bat
+check-tools.bat
+relocate.bat
+exclude.txt
