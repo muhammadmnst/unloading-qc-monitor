@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Database (PostgreSQL)
+  # Database PostgreSQL
   db:
     image: postgres:15-alpine
     container_name: unloading_qc_db
@@ -10,18 +10,18 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: unloading_qc
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # Web Application
+  # Web Application Next.js
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: unloading_qc_app
     restart: always
     ports:
-      - "8090:3000"
+      - "8010:3000"  # Akses Publik: 8010, Internal: 3000
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/unloading_qc?schema=public
       - AUTH_SECRET=b9ba598cedb990a0488e02eab0c9d9ad76dd03e8bd7cfdb5227c46a5d2aba3c0
@@ -31,4 +31,5 @@ services:
 
 volumes:
   postgres_data:
+
 
