@@ -1,9 +1,10 @@
-# Build Stage
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/db"
+ENV NEXTAUTH_SECRET="dummy-secret-for-build"
 RUN npx prisma generate
 RUN npm run build
 
