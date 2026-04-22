@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-export default function TVLayout({ children }: { children: React.ReactNode }) {
+function TVLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const theme = searchParams.get("theme") ?? "dark"
@@ -74,5 +75,17 @@ export default function TVLayout({ children }: { children: React.ReactNode }) {
       {/* Content */}
       <main className="flex-1 p-4">{children}</main>
     </div>
+  )
+}
+
+export default function TVLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-gray-400">
+        Memuat...
+      </div>
+    }>
+      <TVLayoutInner>{children}</TVLayoutInner>
+    </Suspense>
   )
 }

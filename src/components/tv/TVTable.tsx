@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { getPublicDashboardLogs } from "@/app/(qc)/dashboard/actions"
 import { useSearchParams } from "next/navigation"
 
@@ -32,7 +32,8 @@ const STATUS_COLORS_LIGHT: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-800 border border-green-200",
 }
 
-export default function TVTable({ materialType, title, columns, pageSize = 15 }: Props) {
+// Inner component that uses useSearchParams — must be wrapped in <Suspense>
+function TVTableInner({ materialType, title, columns, pageSize = 15 }: Props) {
   const [logs, setLogs] = useState<any[]>([])
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -43,12 +44,11 @@ export default function TVTable({ materialType, title, columns, pageSize = 15 }:
 
   const formatValue = (value: any, type?: string) => {
     if (value === null || value === undefined) return "-"
-    
     switch (type) {
       case "time":
-        return new Date(value).toLocaleTimeString("id-ID", { 
-          hour: "2-digit", 
-          minute: "2-digit" 
+        return new Date(value).toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
         })
       case "decimal":
         return typeof value === "number" ? value.toFixed(2) : value
@@ -68,14 +68,12 @@ export default function TVTable({ materialType, title, columns, pageSize = 15 }:
     }
   }
 
-  // Auto-refresh data every 10 seconds
   useEffect(() => {
     fetchLogs()
     const dataInterval = setInterval(fetchLogs, 10000)
     return () => clearInterval(dataInterval)
   }, [materialType])
 
-  // Auto-paginate every 15 seconds
   useEffect(() => {
     const totalPages = Math.ceil(logs.length / pageSize)
     if (totalPages <= 1) return
@@ -95,7 +93,6 @@ export default function TVTable({ materialType, title, columns, pageSize = 15 }:
 
   return (
     <div className={`rounded-lg border overflow-hidden ${cardBg}`}>
-      {/* Card Header */}
       <div className={`px-5 py-3 flex justify-between items-center border-b ${borderColor} ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
         <h2 className="font-bold text-base tracking-wide">{title}</h2>
         <div className="flex items-center gap-3 text-xs">
@@ -110,7 +107,6 @@ export default function TVTable({ materialType, title, columns, pageSize = 15 }:
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         {loading ? (
           <div className={`p-10 text-center ${isDark ? "text-gray-500" : "text-gray-400"}`}>
@@ -125,10 +121,7 @@ export default function TVTable({ materialType, title, columns, pageSize = 15 }:
             <thead className={`text-xs uppercase ${headerBg}`}>
               <tr>
                 {columns.map((col) => (
-                  <th
-                    key={col.key}
-                    className={`px-4 py-2.5 font-medium text-${col.align ?? "left"}`}
-                  >
+                  <th key={col.key} className={`px-4 py-2.5 font-medium text-${col.align ?? "left"}`}>
                     {col.label}
                   </th>
                 ))}
@@ -165,7 +158,6 @@ export default function TVTable({ materialType, title, columns, pageSize = 15 }:
         )}
       </div>
 
-      {/* Footer pagination dots */}
       {totalPages > 1 && (
         <div className={`px-5 py-2 flex justify-center gap-1.5 border-t ${borderColor}`}>
           {Array.from({ length: totalPages }).map((_, i) => (
@@ -182,5 +174,20 @@ export default function TVTable({ materialType, title, columns, pageSize = 15 }:
         </div>
       )}
     </div>
+  )
+}
+
+// Exported wrapper — provides the required <Suspense> boundary for useSearchParams
+export default function TVTable(props: Props) {
+  return (
+    <Suspense
+      fallback={
+        <div className="rounded-lg border border-gray-800 bg-gray-900 p-10 text-center text-gray-500">
+          Memuat tampilan...
+        </div>
+      }
+    >
+      <TVTableInner {...props} />
+    </Suspense>
   )
 }
